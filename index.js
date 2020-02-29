@@ -1,5 +1,4 @@
 const Bacon = require("baconjs");
-const debug = require("debug")("signalk:signalk-kafka-gw");
 const util = require("util");
 const kafka = require('kafka-node')
 
@@ -30,12 +29,15 @@ module.exports = function(app) {
         'Minimum interval between updates for this path to be sent to the server',
         default: 1
       },
+      selfOnly: {
+        type: 'boolean',
+        title: 'Only send data for self',
+        default: true
+      }
     },
   };
   
   plugin.start = function(options) {
-    debug("start");
-    
     plugin.onStop = [];
     
     var HighLevelProducer = kafka.HighLevelProducer;
@@ -43,12 +45,12 @@ module.exports = function(app) {
     plugin.producer = new HighLevelProducer(plugin.client);
 
     plugin.producer.on('ready', function () {
-      debug("ready")
+      app.debug("ready")
       startSending(options, plugin.producer, plugin.onStop)
     });
 
     plugin.producer.on('error', function(err) {
-      debug("error: " + err)
+      app.error("error: " + err)
     });
   }
 
@@ -62,14 +64,14 @@ module.exports = function(app) {
   
   function startSending(options, producer, onStop) {
     var command = {
-      context: "vessels.self",
+      context: options.selfOnly || typeof options.selfOnly === 'undefined' ? "vessels.self" : "*",
       subscribe: [{
         path: "*",
         period: options.interval * 1000
       }]
     }
 
-    debug("subscription: " + JSON.stringify(command))
+    app.debug("subscription: " + JSON.stringify(command))
     
     app.subscriptionmanager.subscribe(command,
                                       onStop,
@@ -130,7 +132,7 @@ module.exports = function(app) {
     
     plugin.producer.send(payloads, function (err, data) {
       if ( err ) {
-        debug("send error: " + err)
+        app.error("send error: " + err)
       }
       //debug("send data: " + JSON.stringify(data))
     })
@@ -138,6 +140,6 @@ module.exports = function(app) {
 
   function subscription_error(err)
   {
-    debug("error: " + err)
+    app.error("error: " + err)
   }
 };

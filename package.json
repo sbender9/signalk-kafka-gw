@@ -9,10 +9,12 @@
   "keywords": [
     "signalk-node-server-plugin"
   ],
-  "author": {"name": "Scott Bender", "email": "scott@scottbender.net"},
+  "author": {
+    "name": "Scott Bender",
+    "email": "scott@scottbender.net"
+  },
   "contributors": [
-    {
-    }
+    {}
   ],
   "license": "ISC",
   "dependencies": {
